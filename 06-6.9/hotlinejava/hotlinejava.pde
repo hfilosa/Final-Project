@@ -1,5 +1,7 @@
+import java.util.*;
+
 Player p;
-Enemy[] enemies = new Enemy[10];
+Enemy[] enemies = new Enemy[4];
 Barrier[] walls = new Barrier[50];
 
 void setup(){
@@ -21,6 +23,16 @@ void setup(){
      walls[i] = new Barrier(xcor,ycor,w,l);
      walls[i].draw();
    }
+   for (int i=0;i<enemies.length;i++){
+     float xcor=random(790);
+     float ycor=random(790);
+     enemies[i]=new Enemy(xcor,ycor,xcor+10,ycor+10);
+     while (wallCollision(enemies[i].getCoors())){
+       xcor=random(760);
+       ycor=random(760);
+       enemies[i]=new Enemy(xcor,ycor,xcor+40,ycor+40);
+     }
+  }
 }
 
 boolean collision(float[] a, float[] b){
@@ -31,15 +43,15 @@ boolean collision(float[] a, float[] b){
 
 boolean wallCollision(float[] a){
   boolean collision=false;
-  for {Barrier wall : walls){
+  for (Barrier wall : walls){
     float[] b = wall.getCoors();
     if (a[2] > b[0] && a[3] > b[1] && b[2] > a[0] && b[3] > a[1]){
       collision=true;
     }
   }
   return collision;
-  }
 }
+
 
 boolean playerCollision(float[] a){
   float[] b = p.getCoors();
@@ -118,14 +130,25 @@ class Enemy extends Player{
     setxcor(x);
     setycor(y);
   }
+  void setCoors(float[] c){
+    coor=c;
+  }
 }
 
 class coordinate{
   float priority;
   coordinate last;
   float[] coor = new float[4];
-  coordinate(float[] c, float p){
+  coordinate(float[] c, float p, coordinate l){
     coor=c;
+    priority=p;
+    last=l;
+  }
+  coordinate(float[] c, coordinate l){
+    coor=c;
+    last=l;
+  }
+  void setPriority(float p){
     priority=p;
   }
   float getpriority(){
@@ -134,23 +157,32 @@ class coordinate{
   float[] getCoors(){
     return coor;
   }
+  coordinate getLast(){
+    return last;
+  }
+  void move(float x, float y){
+    coor[0]+=x;
+    coor[2]+=x;
+    coor[1]+=y;
+    coor[3]+=y;
+  }
 }
 
 float distance(float[] coors){
   float[] pcoors = p.getCoors();
-  return Math.sqrt((coors[0]-pcoors[0])^2+(coors[0]-pcoors[0])^2);
+  return sqrt(sq(coors[0]-pcoors[0])+sq(coors[0]-pcoors[0]));
 }
 
 class frontier{
-  LinkedList path = new LinkedList();
+  LinkedList<coordinate> path = new LinkedList<coordinate>();
   frontier(coordinate coor){
     path.add(coor);
   }
   void add(coordinate coor){
     boolean inserted=false;
     for (int i=0;i<path.size();i++){
-      if (path.get(i).getpriority()>coor.getpriority()){
-        path.add(coor,i);
+      if (((coordinate)path.get(i)).getpriority()>coor.getpriority()){
+        path.add(i,coor);
         inserted=true;
       }
     }
@@ -167,26 +199,55 @@ class frontier{
 }
 
 void moveEnemies(){
-  for (Enemy e : Enemies){
-    frontier path = new frontier(new coordinate(e.getCoors(),distance(e.getCoors())));
+  for (Enemy e : enemies){
+    frontier path = new frontier(new coordinate(e.getCoors(),distance(e.getCoors()),null));
+    coordinate ans=null;
     while (!path.empty()){
       coordinate temp=path.pop();
-      if (
-      path.add(new coordinate(temp.getCoors(),distance(temp.getCoors()))
+      if (playerCollision(temp.getCoors())){
+        ans=temp;
+        break;
+      }
+      coordinate x1 = new coordinate(temp.getCoors(),temp);
+      x1.move(1,0);
+      x1.setPriority(distance(x1.getCoors()));
+      path.add(x1);
+      coordinate y1 = new coordinate(temp.getCoors(),temp);
+      y1.move(0,1);
+      y1.setPriority(distance(y1.getCoors()));
+      path.add(y1);
+      coordinate x2 = new coordinate(temp.getCoors(),temp);
+      x2.move(-1,0);
+      x2.setPriority(distance(x2.getCoors()));
+      path.add(x2);
+      coordinate y2 = new coordinate(temp.getCoors(),temp);
+      y2.move(0,-1);
+      y2.setPriority(distance(x1.getCoors()));
+      path.add(x1);
+    }
+    coordinate tmp1=null;
+    while (ans.getLast()!=null){
+      tmp1=ans;
+      ans=ans.getLast();
+    }
+    e.setCoors(tmp1.getCoors());
   }
 }
 
 void draw(){
     background(255);  
     p.draw();
-    e.draw();
     p.setColor(100,200,0);    
     for (Barrier wall : walls){
       wall.draw();
     }
-        e.draw();
+     p.setColor(100,200,0);    
+    for (Enemy e : enemies){
+      e.draw();
+    }
     if (keyPressed){
       keyPressed();
+      moveEnemies();
     }
 }
 
