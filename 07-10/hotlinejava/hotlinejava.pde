@@ -137,7 +137,7 @@ class Enemy extends Player{
 
 class coordinate{
   float priority;
-  coordinate last;
+  coordinate last=null;
   float[] coor = new float[4];
   coordinate(float[] c, float p, coordinate l){
     coor=c;
@@ -165,6 +165,9 @@ class coordinate{
     coor[2]+=x;
     coor[1]+=y;
     coor[3]+=y;
+  }
+  boolean same(float[] c){
+    return (int)coor[0]==(int)c[0] && (int)coor[1]==(int)c[1] && (int)coor[2]==(int)c[2] && (int)coor[3]==(int)c[3];
   }
 }
 
@@ -198,48 +201,66 @@ class frontier{
   }
 }
 
+
+
 void moveEnemies(){
   for (Enemy e : enemies){
-    println(e.getCoors());
+    ArrayList<coordinate> exploredArea = new ArrayList<coordinate>();
     frontier path = new frontier(new coordinate(e.getCoors(),distance(e.getCoors()),null));
     coordinate ans=null;
     coordinate temp, x1, x2, y1, y2;
+    boolean explored;
     while (!path.empty()){
       temp=path.pop();
-      println(path.empty());
       if (playerCollision(temp.getCoors())){
         ans=temp;
         println("!");
         break;
       }
-      println("1");
+      explored=false;
       x1 = new coordinate(temp.getCoors(),temp);
-      println(x1.getCoors());
       x1.move(1,0);
       x1.setPriority(distance(x1.getCoors()));
-      println(x1.getCoors());
-      path.add(x1);
+      for (coordinate c : exploredArea){
+        if (c.same(x1.getCoors())) explored=true;
+      }
+      if (!explored) path.add(x1);
       
-       println("4");
+      explored=false;
       y1 = new coordinate(temp.getCoors(),temp);
       y1.move(0,1);
       y1.setPriority(distance(y1.getCoors()));
-      path.add(y1);
-      println("5");
+      for (coordinate c : exploredArea){
+        if (c.same(y1.getCoors())) explored=true;
+      }
+      if (!explored) path.add(y1);
+      
+      explored=false;
       x2 = new coordinate(temp.getCoors(),temp);
       x2.move(-1,0);
       x2.setPriority(distance(x2.getCoors()));
-      path.add(x2);
-      println("6");
+      for (coordinate c : exploredArea){
+        if (c.same(x2.getCoors())) explored=true;
+      }
+      if (!explored) path.add(x2);
+      
+      explored=false;
       y2 = new coordinate(temp.getCoors(),temp);
       y2.move(0,-1);
       y2.setPriority(distance(y2.getCoors()));
-      path.add(y2);
-      println("7");
+      for (coordinate c : exploredArea){
+        if (c.same(y2.getCoors())) explored=true;
+      }
+      if (!explored) path.add(y2);
+      exploredArea.add(temp);
     }
-    println("10");
+    
     coordinate tmp1=null;
+    println("1");
+    println(ans.getCoors());
+    println(p.getCoors());
     while (ans.getLast()!=null){
+        println("2");
       tmp1=ans;
       ans=ans.getLast();
     }
