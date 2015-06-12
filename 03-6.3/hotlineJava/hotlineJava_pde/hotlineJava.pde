@@ -117,6 +117,7 @@ class Enemy{
 void draw(){
     background(255);  
     p.draw();
+     println("You are at" + " " + p.getxcor() + "," + " " + p.getycor());
     e.draw();
     p.setColor(100,200,0);    
     for (Barrier wall : walls){
@@ -156,7 +157,6 @@ void keyPressed(){
             if (vertical) p.setycor(reverse);
             else p.setxcor(reverse);
           }
-          println("You are at" + " " + p.getxcor() + "," + " " + p.getycor());
-        }
+            }
         
 }
